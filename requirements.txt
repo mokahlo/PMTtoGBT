@@ -1,4 +1,2 @@
 pypff
 streamlit
-os
-tempfile
