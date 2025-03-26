@@ -1,5 +1,7 @@
-import pypff
+import streamlit as st
 import os
+import tempfile
+import pypff
 
 def extract_emails_from_pst(pst_file_path, output_dir):
     pst = pypff.file()
@@ -34,12 +36,22 @@ def extract_message(message, output_dir):
         f.write(f"To: {recipients}\n\n")
         f.write(body)
 
-if __name__ == "__main__":
-    import argparse
+st.title("PST Email Extractor")
 
-    parser = argparse.ArgumentParser(description="Extract emails from a PST file.")
-    parser.add_argument("pst_file", help="Path to the PST file")
-    parser.add_argument("output_dir", help="Directory to save extracted emails")
+uploaded_file = st.file_uploader("Upload a .pst file", type=["pst"])
 
-    args = parser.parse_args()
-    extract_emails_from_pst(args.pst_file, args.output_dir)
+if uploaded_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pst") as temp_pst:
+        temp_pst.write(uploaded_file.read())
+        temp_pst_path = temp_pst.name
+
+    with tempfile.TemporaryDirectory() as temp_output_dir:
+        st.info("Extracting emails, please wait...")
+        extract_emails_from_pst(temp_pst_path, temp_output_dir)
+        st.success("Extraction complete!")
+
+        st.download_button(
+            label="Download Extracted Emails as ZIP",
+            data=shutil.make_archive(temp_output_dir, 'zip', temp_output_dir),
+            file_name="extracted_emails.zip"
+        )
